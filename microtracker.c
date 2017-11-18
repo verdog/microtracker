@@ -4,6 +4,8 @@
  * Josh Chandler
 */
 
+/* this is the chordeffect branch. */
+
 #include <stdlib.h>
 #include <msp430.h>
 #include "musicalsp430.c"
