@@ -5,7 +5,6 @@
 */
 
 /* this is the chordeffect branch. */
-/* example change. */
 
 #include <stdlib.h>
 #include <msp430.h>
