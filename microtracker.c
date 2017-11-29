@@ -89,8 +89,6 @@ __interrupt void timer0_A0()
 	}
 	*/
 
-
-
 	return;
 }
 
