@@ -1,0 +1,42 @@
+Bits of a slice:
+
+0000 0000 0000 0000
+Note PwOc EaEb EbEb
+
+Note:
+The first four leftmost bits represent the musical note of the slice.
+This value is usable from 0-11.
+0 = C
+1 = C#
+2 = D
+..etc..
+10 = A#
+11 = B
+
+if the value is set to 12,13,14, or 15, the behavior is (as of Nov 8 2017) undefined.
+
+Pw: Pulse width
+Determines the pulse width of the note.
+Valid values are 0,1,2, and 3.
+0 (0b00) translates to 50% Pulse width
+1 (0b01) translates to 25%
+2 (0b10) translates to 12.5%
+3 (0b11) translates to 6.25%
+
+Oc: Octave
+Chooses which of the four octaves available to play the note on.
+0 (0b00) translates to octave 2 (A2 = 110 hz)
+1 (0b01) translates to octave 3 (A3 = 220 hz)
+2 (0b10) translates to octave 4 (A4 = 440 hz)
+3 (0b11) translates to octave 5 (A5 = 880 hz)
+
+Ea: Effect
+Chooses an effect to apply to the note
+WIP
+3 (0b11) translates to kill note/silence.
+When any note has effect 3 applied, no sound will be played.
+The kill command has higher priority than any other command.
+
+Eb: Effect parameters
+Used to further customize effects.
+WIP
