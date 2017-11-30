@@ -44,7 +44,7 @@ Slice slice_make(MusicNote note, int pulsew, int effect, int eparam)
     result |= effect << 6;
 
     // remaining are effect parameters
-    if (eparam < 0 || eparam > 32) eparam = 0; // only valid values are 0-3
+    if (eparam < 0 || eparam > 32) eparam = 0; // only valid values are 0-32
     result |= eparam;
 
     return result;
@@ -120,21 +120,12 @@ int slice_get_chroma(Slice readme)
 // advances to the next slice in the block
 void slice_advance()
 {
-    unsigned int clock_ticks;
     Slice_index = (Slice_index+1)&(BLOCK_SIZE-1);
-    clock_ticks = hz_to_clock(slice_get_hz(*slice_current()));
 
     ticks_elapsed = 0;
 
     chord_index = 0;
     chord_count = 0;
-
-    /* uneeded? */
-	//timer0_count = 0;
-    //timer0_next = TICKS_PER_STEP/clock_ticks;
-    //timer0_offset = TICKS_PER_STEP - clock_ticks*timer0_next;
-//	TA0CCR2 = timer0_offset;
-    /*          */
 
     // disable interrupts for ccr2
     TA0CCTL2 &= ~(CCIE);

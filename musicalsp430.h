@@ -56,7 +56,7 @@ char effectreg; // effect register
 // 11: effect number of voice 1
 // 00: effect number of voice 0;
 
-int chord_table[4] = {0, 0, 12, 12};
+int chord_table[4] = {0, 0, 0, 0};
 unsigned int chord_index = 0;
 unsigned int chord_count = 0;
 unsigned int chord_next = 3;

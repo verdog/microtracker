@@ -100,6 +100,15 @@ __interrupt void timer0_A0()
 		}
 
 		break;
+		case 1:
+
+		// portamento
+		chord_index = 5;
+		TA0CCR0 -= chord_index;
+		TA0CCR1 = TA0CCR0/2;
+		TA0R = 0;
+
+		break;
 	}
 
 	// calculate how long next frequency will be
@@ -141,10 +150,10 @@ void DEBUG_load_block()
 {
     Slice_buff = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff[0]  = slice_make(E2,0,0,0);
-    Slice_buff[1]  = slice_make(E2,0,0,0);
-    Slice_buff[2]  = slice_make(E2,0,0,0);
-    Slice_buff[3]  = slice_make(E2,0,0,0);
+	Slice_buff[0]  = slice_make(E2,0,1,0);
+    Slice_buff[1]  = slice_make(E2,0,1,0);
+    Slice_buff[2]  = slice_make(E2,0,1,0);
+    Slice_buff[3]  = slice_make(E2,0,1,0);
     Slice_buff[4]  = slice_make(0,0,3,0);
     Slice_buff[5]  = slice_make(0,0,3,0);
     Slice_buff[6]  = slice_make(E3,1,0,0);
