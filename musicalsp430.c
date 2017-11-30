@@ -28,7 +28,7 @@ Slice slice_make(MusicNote note, int pulsew, int effect, int eparam)
     Slice result = 0;
 
     // highest 4 bits are the note
-    while (Chroma[i] != note && i < 48) i++;
+    while (Chroma[i] != note && i < 48) i++; // searches chroma for note to get idx
     result |= (i%12) << 12;
 
     // next 2 bits are the octave
@@ -58,6 +58,7 @@ void play_note(unsigned int hz, int width, int voice)
     {
         TA0CCR0 = hz_to_clock(hz);
         TA0CCR1 = TA0CCR0/width + 1;
+        TA0R = 0;
     }
     else
     {
@@ -92,6 +93,9 @@ void slice_play(Slice readme)
         case 3: pw = 16; break;
     }
 
+    // set effect
+    effect_set(0, effect);
+
     if (effect == 3) pw = 1; // kill effect
 
     // play it
@@ -120,15 +124,60 @@ void slice_advance()
     Slice_index = (Slice_index+1)&(BLOCK_SIZE-1);
     clock_ticks = hz_to_clock(slice_get_hz(*slice_current()));
 
+    ticks_elapsed = 0;
+
     chord_index = 0;
     chord_count = 0;
 
-	timer0_count = 0;
-    timer0_next = TICKS_PER_STEP/clock_ticks;
-    timer0_offset = TICKS_PER_STEP - clock_ticks*timer0_next;
-	TA0CCR2 = timer0_offset;
+    /* uneeded? */
+	//timer0_count = 0;
+    //timer0_next = TICKS_PER_STEP/clock_ticks;
+    //timer0_offset = TICKS_PER_STEP - clock_ticks*timer0_next;
+//	TA0CCR2 = timer0_offset;
+    /*          */
+
+    // disable interrupts for ccr2
+    TA0CCTL2 &= ~(CCIE);
+
+    // play slice if it's different than before
     if (*slice_current() != Slice_buff[(Slice_index-1)&(BLOCK_SIZE-1)])
         slice_play(Slice_buff[Slice_index]);
+
+    return;
+}
+
+int effect_get(unsigned int voice)
+{
+    switch (voice) {
+        case 0:
+        return effectreg & 0b00000011;
+
+        case 1:
+        return (effectreg & 0b11000000) >> 6;
+
+        default: return 0;
+    }
+    return 0;
+}
+
+void effect_set(unsigned int voice, unsigned int effect)
+{
+    if (effect > 3)
+    {
+        return; // invalid effect
+    }
+
+    switch (voice) {
+        case 0:
+        effectreg &= 0b11111100; // reset effect
+        effectreg |= effect;
+        return;
+
+        case 1:
+        effectreg &= 0b00111111; // reset effect
+        effectreg |= (effect << 6);
+        default: return;
+    }
 
     return;
 }

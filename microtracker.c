@@ -40,7 +40,7 @@ int main()
     TA0CTL  = TASSEL_2 | MC_1 | ID_3; // voice 0
     TA0CCTL0 = CCIE; // frequency interrupt
     TA0CCTL1 = OUTMOD_7; // PWM reset/set
-    TA0CCTL2 = CCIE; // next note interrupt
+    // TA0CCTL2 = CCIE; // next note interrupt
 
     // voice 1
     //TA1CCTL0 = CCIE;
@@ -75,19 +75,44 @@ __interrupt void button()
 #pragma vector=TIMER0_A0_VECTOR // timer 0 interrupt
 __interrupt void timer0_A0()
 {
-	timer0_count++;
-	/*
-	chord_count++;
-	if (chord_count >= chord_next)
-	{
-		chord_count = 0;
-		chord_index = (chord_index+1)&3;
+	//timer0_count++;
 
-		if (chord_table[chord_index] != chord_table[(chord_index-1)&3])
-			play_note(Chroma[slice_get_chroma(*slice_current()) + chord_table[chord_index]],
-			2, 0);
+	// increase counter
+	ticks_elapsed += TA0CCR0;
+
+	// handle effects
+	switch (effect_get(0)) {
+		case 0: // chord effect
+
+		chord_count++;
+		if (chord_count >= chord_next)
+		{
+			chord_count = 0;
+			chord_index = (chord_index+1)&3; // +1 mod 4
+
+			// change note for chord effect
+			// only trigger a note change if it's different than the previous note
+			if (chord_table[chord_index] != chord_table[(chord_index-1)&3])
+			{
+				play_note(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_index])%48 ],
+				2, 0);
+			}
+		}
+
+		break;
 	}
-	*/
+
+	// calculate how long next frequency will be
+	//ticks_next = hz_to_clock(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_index])%48 ]);
+	ticks_next = TA0CCR0; // set by play_note above
+
+	// check if next note will be triggered
+	if (ticks_elapsed + ticks_next > TICKS_PER_STEP)
+	{
+		// set up next note trigger
+		TA0CCR2 = (ticks_elapsed + ticks_next) - TICKS_PER_STEP;
+		TA0CCTL2 = CCIE;
+	}
 
 	return;
 }
@@ -99,11 +124,8 @@ __interrupt void timer0_A1()
     {
         case TA0IV_NONE: break;     // should never happen
         case TA0IV_TACCR1: break;   // should never happen
-        case TA0IV_TACCR2: // end of note interrupt
-        if (timer0_count >= timer0_next)
-        {
+        case TA0IV_TACCR2: 			// end of note interrupt
             slice_advance();
-        }
         break;
     }
 	return;

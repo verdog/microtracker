@@ -1,6 +1,6 @@
 # Project name
 SOURCE          = microtracker.c
-ADDITIONAL      =
+ADDITIONAL      = 
 # Get base name so we can create .elf file
 NAME            = $(basename $(SOURCE))
 # MSP430 MCU to compile for

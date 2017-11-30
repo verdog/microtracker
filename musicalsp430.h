@@ -27,7 +27,7 @@ typedef enum NoteHertz MusicNote;
 // GLOBALS
 // because I'm a savage
 
-#define BLOCK_SIZE 64
+#define BLOCK_SIZE (64)
 
 Slice *Slice_buff; // global slice buffer. 32 slices.
 int Slice_index = -1;   // Slice_index in Slice array
@@ -47,10 +47,21 @@ unsigned int timer0_count = 0;// how many times timer0 has been triggered since 
 unsigned int timer0_next = 0;
 unsigned int timer0_offset = 0; // offset to trigger next note
 
+unsigned int ticks_next; // equivalent to TA0CCR0?
+unsigned long ticks_elapsed = 0; // elapsed time since beginning of a note
+
+/* effects */
+char effectreg; // effect register
+// 11xx xx00
+// 11: effect number of voice 1
+// 00: effect number of voice 0;
+
 int chord_table[4] = {0, 0, 12, 12};
 unsigned int chord_index = 0;
 unsigned int chord_count = 0;
-unsigned int chord_next = 2;
+unsigned int chord_next = 3;
+
+////////////////////////////////////////////////////////////////////////////////
 
 // hz_to_clock
 // converts an integer frequency value to the value used to set a
@@ -80,6 +91,12 @@ int slice_get_chroma(Slice readme);
 
 // advances to the next slice in the block
 void slice_advance();
+
+// returns the current effect on the passed voice
+int effect_get(unsigned int voice);
+
+// sets the effect of a voice
+void effect_set(unsigned int voice, unsigned int effect);
 
 void DEBUG_load_block();
 
