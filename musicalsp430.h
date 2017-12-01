@@ -32,8 +32,8 @@ typedef enum NoteHertz MusicNote;
 Slice *Slice_buff; // global slice buffer. 32 slices.
 int Slice_index = -1;   // Slice_index in Slice array
 
-long unsigned int TICKS_PER_BEAT;       // ticks per beat.
-#define TICKS_PER_STEP (TICKS_PER_BEAT/4) // ticks per step. (a 16th note)
+long unsigned int TICKS_PER_BEAT = 0;       // ticks per beat.
+long unsigned int TICKS_PER_STEP = 0;       // ticks per step. (a 16th note)
 
 // 110 hz will be the lowest A. (A2)
 // C2 will be the lowest note.
@@ -56,10 +56,25 @@ char effectreg; // effect register
 // 11: effect number of voice 1
 // 00: effect number of voice 0;
 
-int chord_table[4] = {0, 0, 0, 0};
+int chord_table_idx = 0;
+const char chord_table[12][4] =
+{
+    {0,0,0,0},
+    {0,7,0,7},
+    {0,0,7,7},
+    {0,0,12,12},
+    {0,4,4,7},
+    {0,3,3,7},
+    {0,0,4,4},
+    {0,0,3,3},
+    {0,4,0,4},
+    {0,3,0,3},
+    {0,4,7,11},
+    {0,3,7,10}
+};
 unsigned int chord_index = 0;
 unsigned int chord_count = 0;
-unsigned int chord_next = 3;
+unsigned int chord_next = 7;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,10 +108,10 @@ int slice_get_chroma(Slice readme);
 void slice_advance();
 
 // returns the current effect on the passed voice
-int effect_get(unsigned int voice);
+int effect_flag_get(unsigned int voice);
 
 // sets the effect of a voice
-void effect_set(unsigned int voice, unsigned int effect);
+void effect_flag_set(unsigned int voice, unsigned int effect);
 
 void DEBUG_load_block();
 

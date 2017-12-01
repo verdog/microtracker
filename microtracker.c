@@ -12,7 +12,8 @@
 
 int main()
 {
-	TICKS_PER_BEAT = 43000 - 1;
+	//TICKS_PER_BEAT = 65535 - 1; // 19330
+	TICKS_PER_STEP = 19330;
 
     // stop watchdog timer
 	WDTCTL  = WDTPW | WDTHOLD;
@@ -75,13 +76,13 @@ __interrupt void button()
 #pragma vector=TIMER0_A0_VECTOR // timer 0 interrupt
 __interrupt void timer0_A0()
 {
-	//timer0_count++;
+	//timer0_count++
 
 	// increase counter
 	ticks_elapsed += TA0CCR0;
 
 	// handle effects
-	switch (effect_get(0)) {
+	switch (effect_flag_get(0)) {
 		case 0: // chord effect
 
 		chord_count++;
@@ -92,9 +93,9 @@ __interrupt void timer0_A0()
 
 			// change note for chord effect
 			// only trigger a note change if it's different than the previous note
-			if (chord_table[chord_index] != chord_table[(chord_index-1)&3])
+			if (chord_table[chord_table_idx][chord_index] != chord_table[chord_table_idx][(chord_index-1)&3])
 			{
-				play_note(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_index])%48 ],
+				play_note(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_table_idx][chord_index])%48 ],
 				2, 0);
 			}
 		}
@@ -119,7 +120,16 @@ __interrupt void timer0_A0()
 	if (ticks_elapsed + ticks_next > TICKS_PER_STEP)
 	{
 		// set up next note trigger
-		TA0CCR2 = (ticks_elapsed + ticks_next) - TICKS_PER_STEP;
+		TA0CCR2 = ((ticks_elapsed + ticks_next) - TICKS_PER_STEP);
+
+		// this is to catch cases where TA0CCR2 is set very small
+		// which messes up EVERYTHING ;)
+		
+		if (TA0CCR2 < ticks_next/8)
+		{
+			TA0CCR2 = ticks_next/8;
+		}
+
 		TA0CCTL2 = CCIE;
 	}
 
@@ -150,77 +160,77 @@ void DEBUG_load_block()
 {
     Slice_buff = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff[0]  = slice_make(E2,0,1,0);
-    Slice_buff[1]  = slice_make(E2,0,1,0);
-    Slice_buff[2]  = slice_make(E2,0,1,0);
-    Slice_buff[3]  = slice_make(E2,0,1,0);
+	Slice_buff[0]  = slice_make(G3,0,0,0);
+    Slice_buff[1]  = slice_make(G3,0,0,0);
+    Slice_buff[2]  = slice_make(G4,0,0,4);
+    Slice_buff[3]  = slice_make(G4,0,0,4);
     Slice_buff[4]  = slice_make(0,0,3,0);
-    Slice_buff[5]  = slice_make(0,0,3,0);
-    Slice_buff[6]  = slice_make(E3,1,0,0);
-    Slice_buff[7]  = slice_make(E3,1,0,0);
+    Slice_buff[5]  = slice_make(G3,0,0,0);
+    Slice_buff[6]  = slice_make(G4,0,0,0);
+    Slice_buff[7]  = slice_make(C2,0,3,0);
 
-    Slice_buff[8]  = slice_make(0,0,3,0);
+    Slice_buff[8]  = slice_make(G4,0,0,6);
     Slice_buff[9]  = slice_make(0,0,3,0);
-    Slice_buff[10] = slice_make(E2,0,0,0);
-    Slice_buff[11] = slice_make(E2,0,0,0);
-    Slice_buff[12] = slice_make(E2,0,0,0);
-    Slice_buff[13] = slice_make(E2,0,0,0);
-    Slice_buff[14] = slice_make(G2,0,0,0);
-    Slice_buff[15] = slice_make(G2,0,0,0);
+    Slice_buff[10] = slice_make(G4,0,0,0);
+    Slice_buff[11] = slice_make(0,0,3,0);
+    Slice_buff[12] = slice_make(0,0,3,0);
+    Slice_buff[13] = slice_make(0,0,3,0);
+    Slice_buff[14] = slice_make(G4,0,0,0);
+    Slice_buff[15] = slice_make(G4,0,0,0);
 
-    Slice_buff[16] = slice_make(A2,0,0,0);
-    Slice_buff[17] = slice_make(A2,0,0,0);
-    Slice_buff[18] = slice_make(0,0,3,0);
-    Slice_buff[19] = slice_make(0,0,3,0);
-    Slice_buff[20] = slice_make(A2,0,0,0);
-    Slice_buff[21] = slice_make(A2,0,0,0);
+    Slice_buff[16] = slice_make(A3,0,0,0);
+    Slice_buff[17] = slice_make(A3,0,0,0);
+    Slice_buff[18] = slice_make(A4,0,0,7);
+    Slice_buff[19] = slice_make(A4,0,0,7);
+    Slice_buff[20] = slice_make(0,0,3,0);
+    Slice_buff[21] = slice_make(0,0,3,0);
     Slice_buff[22] = slice_make(0,0,3,0);
     Slice_buff[23] = slice_make(0,0,3,0);
 
-    Slice_buff[24] = slice_make(A3,1,0,0);
-    Slice_buff[25] = slice_make(A3,1,0,0);
-    Slice_buff[26] = slice_make(A3,0,0,0);
-    Slice_buff[27] = slice_make(A3,0,0,0);
-    Slice_buff[28] = slice_make(As2,0,0,0);
-    Slice_buff[29] = slice_make(As2,0,0,0);
-    Slice_buff[30] = slice_make(0,0,3,0);
-    Slice_buff[31] = slice_make(0,0,3,0);
+    Slice_buff[24] = slice_make(G3,0,0,0);
+    Slice_buff[25] = slice_make(G3,0,0,0);
+    Slice_buff[26] = slice_make(0,0,3,0);
+    Slice_buff[27] = slice_make(0,0,3,0);
+    Slice_buff[28] = slice_make(0,0,3,0);
+    Slice_buff[29] = slice_make(0,0,3,0);
+    Slice_buff[30] = slice_make(G4,0,0,0);
+    Slice_buff[31] = slice_make(G4,0,0,0);
 
-	Slice_buff[32] = slice_make(B2,0,0,0);
-    Slice_buff[33] = slice_make(B2,0,0,0);
-    Slice_buff[34] = slice_make(B2,0,0,0);
-    Slice_buff[35] = slice_make(B2,0,0,0);
-    Slice_buff[36] = slice_make(B3,1,0,0);
-    Slice_buff[37] = slice_make(B3,1,0,0);
-    Slice_buff[38] = slice_make(0,0,3,0);
-    Slice_buff[39] = slice_make(0,0,3,0);
+	Slice_buff[32] = slice_make(G3,0,0,0);
+    Slice_buff[33] = slice_make(G3,0,0,0);
+    Slice_buff[34] = slice_make(G4,0,0,4);
+    Slice_buff[35] = slice_make(G4,0,0,4);
+    Slice_buff[36] = slice_make(0,0,3,0);
+    Slice_buff[37] = slice_make(G3,0,0,0);
+    Slice_buff[38] = slice_make(G4,0,0,0);
+    Slice_buff[39] = slice_make(C2,0,3,0);
 
-    Slice_buff[40] = slice_make(A2,0,0,0);
-    Slice_buff[41] = slice_make(A2,0,0,0);
-    Slice_buff[42] = slice_make(A2,0,0,0);
-    Slice_buff[43] = slice_make(A2,0,0,0);
-    Slice_buff[44] = slice_make(A3,1,0,0);
-    Slice_buff[45] = slice_make(A3,1,0,0);
-    Slice_buff[46] = slice_make(E2,0,0,0);
-    Slice_buff[47] = slice_make(E2,0,0,0);
+    Slice_buff[40] = slice_make(G4,0,0,6);
+    Slice_buff[41] = slice_make(0,0,3,0);
+    Slice_buff[42] = slice_make(G4,0,0,0);
+    Slice_buff[43] = slice_make(0,0,3,0);
+    Slice_buff[44] = slice_make(0,0,3,0);
+    Slice_buff[45] = slice_make(0,0,3,0);
+    Slice_buff[46] = slice_make(B4,0,0,0);
+    Slice_buff[47] = slice_make(B4,0,0,0);
 
-    Slice_buff[48] = slice_make(E2,0,0,0);
-    Slice_buff[49] = slice_make(0,0,3,0);
-    Slice_buff[50] = slice_make(E2,0,0,0);
-    Slice_buff[51] = slice_make(E2,0,0,0);
-    Slice_buff[52] = slice_make(E3,1,0,0);
-    Slice_buff[53] = slice_make(E3,1,0,0);
-    Slice_buff[54] = slice_make(E2,0,0,0);
-    Slice_buff[55] = slice_make(E2,0,0,0);
+    Slice_buff[48] = slice_make(C5,0,0,6);
+    Slice_buff[49] = slice_make(B4,0,0,0);
+    Slice_buff[50] = slice_make(A4,0,0,0);
+    Slice_buff[51] = slice_make(G4,0,0,0);
+    Slice_buff[52] = slice_make(B4,0,3,0);
+    Slice_buff[53] = slice_make(B4,0,3,0);
+    Slice_buff[54] = slice_make(0,0,3,0);
+    Slice_buff[55] = slice_make(0,0,3,0);
 
-    Slice_buff[56] = slice_make(E3,1,0,0);
-    Slice_buff[57] = slice_make(E3,1,0,0);
-    Slice_buff[58] = slice_make(D3,0,0,0);
-    Slice_buff[59] = slice_make(D3,0,0,0);
-    Slice_buff[60] = slice_make(B2,0,0,0);
-    Slice_buff[61] = slice_make(B2,0,0,0);
-    Slice_buff[62] = slice_make(G2,0,0,0);
-    Slice_buff[63] = slice_make(G2,0,0,0);
+    Slice_buff[56] = slice_make(G3,0,0,0);
+    Slice_buff[57] = slice_make(G3,0,0,0);
+    Slice_buff[58] = slice_make(0,0,3,0);
+    Slice_buff[59] = slice_make(0,0,3,0);
+    Slice_buff[60] = slice_make(0,0,3,0);
+    Slice_buff[61] = slice_make(0,0,3,0);
+    Slice_buff[62] = slice_make(G4,0,0,0);
+    Slice_buff[63] = slice_make(G4,0,0,0);
 
     return;
 }

@@ -82,6 +82,7 @@ void slice_play(Slice readme)
     int octave = (0x3 & readme >> 10);
     int note = Chroma[((readme >> 12) + 12*octave)%48];
     int effect = (readme >> 6)&3;
+    int effectparam = (readme)&31;
 
     // determine pulse width
     unsigned char pw;
@@ -93,8 +94,18 @@ void slice_play(Slice readme)
         case 3: pw = 16; break;
     }
 
+    // select chord
+    if (effect == 0)
+    {
+        chord_table_idx = effectparam%12;
+    }
+    else
+    {
+        chord_table_idx = 0;
+    }
+
     // set effect
-    effect_set(0, effect);
+    effect_flag_set(0, effect);
 
     if (effect == 3) pw = 1; // kill effect
 
@@ -137,7 +148,7 @@ void slice_advance()
     return;
 }
 
-int effect_get(unsigned int voice)
+int effect_flag_get(unsigned int voice)
 {
     switch (voice) {
         case 0:
@@ -151,7 +162,7 @@ int effect_get(unsigned int voice)
     return 0;
 }
 
-void effect_set(unsigned int voice, unsigned int effect)
+void effect_flag_set(unsigned int voice, unsigned int effect)
 {
     if (effect > 3)
     {
