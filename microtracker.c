@@ -12,14 +12,18 @@
 
 int main()
 {
-	//TICKS_PER_BEAT = 65535 - 1; // 19330
-	TICKS_PER_STEP = 19330;
-
     // stop watchdog timer
 	WDTCTL  = WDTPW | WDTHOLD;
     // run at 1MHz
     BCSCTL1 = CALBC1_1MHZ;
     DCOCTL  = CALDCO_1MHZ;
+
+	// load slices
+	DEBUG_load_block_0();
+	DEBUG_load_block_1();
+
+	//TICKS_PER_BEAT = 65535 - 1; // 19330
+	TICKS_PER_STEP = 19330;
 
     // set up button
     P1REN = 0;
@@ -44,14 +48,11 @@ int main()
     // TA0CCTL2 = CCIE; // next note interrupt
 
     // voice 1
-    //TA1CCTL0 = CCIE;
-    //TA1CTL  = TASSEL_2 | MC_1 | ID_3; // voice 1
-    //TA1CCTL1 = OUTMOD_7; // PWM reset/set
+    TA1CCTL0 = CCIE;
+    TA1CTL  = TASSEL_2 | MC_1 | ID_3; // voice 1
+    TA1CCTL1 = OUTMOD_7; // PWM reset/set
 
     __bis_SR_register(GIE); // interrupts enabled
-
-    // load slices
-    DEBUG_load_block_0();
 
     // first notes
 	slice_advance();
@@ -85,7 +86,7 @@ __interrupt void timer0_A0()
 	switch (effect_flag_get(0)) {
 		case 0: // chord effect
 			chord_count_0++;
-			if (chord_count_0 >= chord_next_0)
+			if (chord_count_0 >= chord_next)
 			{
 				chord_count_0 = 0;
 				chord_index_0 = (chord_index_0+1)&3; // +1 mod 4
@@ -94,7 +95,7 @@ __interrupt void timer0_A0()
 				// only trigger a note change if it's different than the previous note
 				if (chord_table[chord_table_idx_0][chord_index_0] != chord_table[chord_table_idx_0][(chord_index_0-1)&3])
 				{
-					play_note(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_table_idx_0][chord_index_0])%48 ],
+					play_note(Chroma[ (slice_get_chroma(*slice_current(0)) + chord_table[chord_table_idx_0][chord_index_0])%48 ],
 					2, 0);
 				}
 			}
@@ -172,19 +173,70 @@ __interrupt void timer0_A1()
 }
 
 #pragma vector=TIMER1_A0_VECTOR // timer 1 interrupts
-__interrupt void timer1()
+__interrupt void timer1_A0()
 {
+	// handle effects
+	switch (effect_flag_get(1)) {
+		case 0: // chord effect
+			chord_count_1++;
+			if (chord_count_1 >= chord_next)
+			{
+				chord_count_1 = 0;
+				chord_index_1= (chord_index_1+1)&3; // +1 mod 4
 
+				// change note for chord effect
+				// only trigger a note change if it's different than the previous note
+				if (chord_table[chord_table_idx_1][chord_index_1] != chord_table[chord_table_idx_1][(chord_index_1-1)&3])
+				{
+					play_note(Chroma[ (slice_get_chroma(*slice_current(1)) + chord_table[chord_table_idx_1][chord_index_1])%48 ],
+					2, 1);
+				}
+			}
+			break;
+
+		case 1:
+			// portamento
+			TA1CCR0 = TA1CCR0 + slide_speed_1;
+			// 1924 = C1
+			if (slide_speed_1 > 0 && TA1CCR0 > 3848) // going down
+				TA1CCR0 = 64;
+			if (slide_speed_1 < 0 && TA1CCR0 < 64) // going up
+			 	TA1CCR0 = 3848;
+			TA1CCR1 = TA1CCR0/2;
+			break;
+
+		case 2:
+			slide_tick_1++;
+			slide_tick_1 &= 3;
+
+			// pulse width sweep
+			if (slide_tick_1 == 0)
+			{
+				TA1CCR1 += slide_speed_1;
+				if (slide_speed_1 > 0 && TA1CCR1 > TA1CCR0)
+				{
+					slide_speed_1 *= -1;
+					TA1CCR1 = TA1CCR0;
+				}
+				if (slide_speed_1 < 0 && TA1CCR1 > TA1CCR0)
+				{
+					slide_speed_1 *= -1;
+					TA1CCR1 = 0;
+				}
+			}
+			break;
+	}
 }
 
 void DEBUG_load_block_0()
 {
     Slice_buff_0 = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff_0[0]  = slice_make(B5,0,1,31);
-    Slice_buff_0[1]  = slice_make(G2,0,2,32);
-    Slice_buff_0[2]  = slice_make(G3,3,2,1);
-    Slice_buff_0[3]  = slice_make(G3,3,2,1);
+	Slice_buff_0[0]  = slice_make(C2,0,0,0);
+    Slice_buff_0[1]  = slice_make(C2,0,0,0);
+    Slice_buff_0[2]  = slice_make(C3,1,0,0);
+    Slice_buff_0[3]  = slice_make(C3,1,0,0);
+	/*
     Slice_buff_0[4]  = slice_make(B5,0,1,31);
     Slice_buff_0[5]  = slice_make(G3,1,2,63);
     Slice_buff_0[6]  = slice_make(G3,1,2,63);
@@ -252,7 +304,7 @@ void DEBUG_load_block_0()
     Slice_buff_0[61] = slice_make(0,0,3,0);
     Slice_buff_0[62] = slice_make(G4,0,0,0);
     Slice_buff_0[63] = slice_make(G4,0,0,0);
-
+	*/
     return;
 }
 
@@ -260,10 +312,11 @@ void DEBUG_load_block_1()
 {
 	Slice_buff_1 = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff_1[0]  = slice_make(B5,0,1,31);
-    Slice_buff_1[1]  = slice_make(G2,0,2,32);
-    Slice_buff_1[2]  = slice_make(G3,3,2,1);
-    Slice_buff_1[3]  = slice_make(G3,3,2,1);
+	Slice_buff_1[0]  = slice_make(C5,0,1,31);
+    Slice_buff_1[1]  = slice_make(E4,0,0,0);
+    Slice_buff_1[2]  = slice_make(G4,0,0,0);
+    Slice_buff_1[3]  = slice_make(C5,0,0,0);
+	/*
     Slice_buff_1[4]  = slice_make(B5,0,1,31);
     Slice_buff_1[5]  = slice_make(G3,1,2,63);
     Slice_buff_1[6]  = slice_make(G3,1,2,63);
@@ -331,6 +384,6 @@ void DEBUG_load_block_1()
     Slice_buff_1[61] = slice_make(0,0,3,0);
     Slice_buff_1[62] = slice_make(G4,0,0,0);
     Slice_buff_1[63] = slice_make(G4,0,0,0);
-
+	*/
     return;
 }

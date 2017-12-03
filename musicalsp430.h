@@ -27,7 +27,7 @@ typedef enum NoteHertz MusicNote;
 // GLOBALS
 // because I'm a savage
 
-#define BLOCK_SIZE (64)
+#define BLOCK_SIZE (4)
 
 Slice *Slice_buff_0; // global slice buffer for voice 0.
 Slice *Slice_buff_1; // global slice buffer for voice 1.
@@ -44,12 +44,9 @@ const MusicNote Chroma[] = {
     C4, Cs4, D4, Ds4, E4, F4, Fs4, G4, Gs4, A4, As4, B4,
     C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5, As5, B5};
 
-unsigned int timer0_count = 0;// how many times timer0 has been triggered since last note change
-unsigned int timer0_next = 0;
-unsigned int timer0_offset = 0; // offset to trigger next note
-
 unsigned int ticks_next; // equivalent to TA0CCR0?
 unsigned long ticks_elapsed = 0; // elapsed time since beginning of a note
+
 
 /* effects */
 char effectreg; // effect register
@@ -58,6 +55,7 @@ char effectreg; // effect register
 // 00: effect number of voice 0;
 
 int chord_table_idx_0 = 0;
+int chord_table_idx_1 = 0;
 const char chord_table[12][4] =
 {
     {0,0,0,0},
@@ -73,12 +71,19 @@ const char chord_table[12][4] =
     {0,4,7,11},
     {0,3,7,10}
 };
+unsigned int chord_next = 7;
+
 unsigned int chord_index_0 = 0;
 unsigned int chord_count_0 = 0;
-unsigned int chord_next_0 = 7;
+
+unsigned int chord_index_1 = 0;
+unsigned int chord_count_1 = 0;
 
 int slide_speed_0 = 0;
 int slide_tick_0 = 0;
+
+int slide_speed_1 = 0;
+int slide_tick_1 = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,10 +102,10 @@ Slice slice_make(MusicNote note, int pulsew, int effect, int eparam);
 void play_note(unsigned int hz, int width, int voice);
 
 // returns current slice
-Slice* slice_current();
+Slice* slice_current(unsigned int voice);
 
 // processes a slice.
-void slice_play(Slice readme);
+void slice_play(Slice readme, unsigned int voice);
 
 // current note
 // returns the note of the passed slice

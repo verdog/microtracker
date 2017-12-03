@@ -62,22 +62,48 @@ void play_note(unsigned int hz, int width, int voice)
     }
     else
     {
-        TA1CCR0 = hz_to_clock(hz);
+        TA1CCR0 = hz_to_clock(hz*2);
         TA1CCR1 = TA1CCR0/width + 1;
+        TA1R = 0;
     }
 
     return;
 }
 
 // returns current slice
-Slice* slice_current()
+Slice* slice_current(unsigned int voice)
 {
-    return &Slice_buff_0[Slice_index];
+    voice %= 2;
+    switch (voice)
+    {
+        case 0:
+            return &Slice_buff_0[Slice_index];
+        case 1:
+            return &Slice_buff_1[Slice_index];
+        default:
+            return &Slice_buff_0[Slice_index];
+    }
 }
 
 // processes a slice.
-void slice_play(Slice readme)
+void slice_play(Slice readme, unsigned int voice)
 {
+    voice %= 2;
+    int *chord_table_idx_p;
+    int *slide_speed_p;
+
+    switch (voice)
+    {
+        case 0:
+            chord_table_idx_p = &chord_table_idx_0;
+            slide_speed_p = &slide_speed_0;
+            break;
+        case 1:
+            chord_table_idx_p = &chord_table_idx_1;
+            slide_speed_p = &slide_speed_1;
+            break;
+    }
+
     // the first four bytes of a slice are the note value
     int octave = (0x3 & readme >> 10);
     int note = Chroma[((readme >> 12) + 12*octave)%48];
@@ -97,23 +123,23 @@ void slice_play(Slice readme)
     switch(effect)
     {
         case 0: // chord/none
-            chord_table_idx_0 = effectparam%12;
+            *chord_table_idx_p = effectparam%12;
             break;
 
         case 1: // portamento
             if (effectparam & 0b100000)
             {   // slide up
-                slide_speed_0 = (0 - ((effectparam & 0b011111)+1))*2;
+                *slide_speed_p = (0 - ((effectparam & 0b011111)+1))*2;
             }
             else
             {
                 // slide down
-                slide_speed_0 = ((effectparam & 0b011111)+1)*2;
+                *slide_speed_p = ((effectparam & 0b011111)+1)*2;
             }
             break;
 
         case 2: // pulse width sweep
-            slide_speed_0 = 1 + effectparam;
+            *slide_speed_p = 1 + effectparam;
             break;
         case 3: // kill
             pw = 1;
@@ -121,10 +147,10 @@ void slice_play(Slice readme)
     }
 
     // set effect
-    effect_flag_set(0, effect);
+    effect_flag_set(voice, effect);
 
     // play it
-    play_note(note, pw, 0);
+    play_note(note, pw, voice);
 
     return;
 }
@@ -151,13 +177,17 @@ void slice_advance()
 
     chord_index_0 = 0;
     chord_count_0 = 0;
+    chord_index_1 = 0;
+    chord_count_1 = 0;
 
     // disable interrupts for ccr2
     TA0CCTL2 &= ~(CCIE);
 
     // play slice if it's different than before
-    if (*slice_current() != Slice_buff_0[(Slice_index-1)&(BLOCK_SIZE-1)])
-        slice_play(Slice_buff_0[Slice_index]);
+    if (*slice_current(0) != Slice_buff_0[(Slice_index-1)&(BLOCK_SIZE-1)])
+        slice_play(Slice_buff_0[Slice_index],0);
+    if (*slice_current(1) != Slice_buff_1[(Slice_index-1)&(BLOCK_SIZE-1)])
+        slice_play(Slice_buff_1[Slice_index],1);
 
     return;
 }
