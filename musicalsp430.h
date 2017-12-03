@@ -27,9 +27,10 @@ typedef enum NoteHertz MusicNote;
 // GLOBALS
 // because I'm a savage
 
-#define BLOCK_SIZE (8)
+#define BLOCK_SIZE (64)
 
-Slice *Slice_buff; // global slice buffer. 32 slices.
+Slice *Slice_buff_0; // global slice buffer for voice 0.
+Slice *Slice_buff_1; // global slice buffer for voice 1.
 int Slice_index = -1;   // Slice_index in Slice array
 
 long unsigned int TICKS_PER_BEAT = 0;       // ticks per beat.
@@ -56,7 +57,7 @@ char effectreg; // effect register
 // 11: effect number of voice 1
 // 00: effect number of voice 0;
 
-int chord_table_idx = 0;
+int chord_table_idx_0 = 0;
 const char chord_table[12][4] =
 {
     {0,0,0,0},
@@ -72,9 +73,9 @@ const char chord_table[12][4] =
     {0,4,7,11},
     {0,3,7,10}
 };
-unsigned int chord_index = 0;
-unsigned int chord_count = 0;
-unsigned int chord_next = 7;
+unsigned int chord_index_0 = 0;
+unsigned int chord_count_0 = 0;
+unsigned int chord_next_0 = 7;
 
 int slide_speed_0 = 0;
 int slide_tick_0 = 0;
@@ -116,6 +117,7 @@ int effect_flag_get(unsigned int voice);
 // sets the effect of a voice
 void effect_flag_set(unsigned int voice, unsigned int effect);
 
-void DEBUG_load_block();
+void DEBUG_load_block_0();
+void DEBUG_load_block_1();
 
 #endif

@@ -72,7 +72,7 @@ void play_note(unsigned int hz, int width, int voice)
 // returns current slice
 Slice* slice_current()
 {
-    return &Slice_buff[Slice_index];
+    return &Slice_buff_0[Slice_index];
 }
 
 // processes a slice.
@@ -97,7 +97,7 @@ void slice_play(Slice readme)
     switch(effect)
     {
         case 0: // chord/none
-            chord_table_idx = effectparam%12;
+            chord_table_idx_0 = effectparam%12;
             break;
 
         case 1: // portamento
@@ -149,15 +149,15 @@ void slice_advance()
 
     ticks_elapsed = 0;
 
-    chord_index = 0;
-    chord_count = 0;
+    chord_index_0 = 0;
+    chord_count_0 = 0;
 
     // disable interrupts for ccr2
     TA0CCTL2 &= ~(CCIE);
 
     // play slice if it's different than before
-    if (*slice_current() != Slice_buff[(Slice_index-1)&(BLOCK_SIZE-1)])
-        slice_play(Slice_buff[Slice_index]);
+    if (*slice_current() != Slice_buff_0[(Slice_index-1)&(BLOCK_SIZE-1)])
+        slice_play(Slice_buff_0[Slice_index]);
 
     return;
 }
