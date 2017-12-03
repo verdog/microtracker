@@ -84,32 +84,54 @@ __interrupt void timer0_A0()
 	// handle effects
 	switch (effect_flag_get(0)) {
 		case 0: // chord effect
-
-		chord_count++;
-		if (chord_count >= chord_next)
-		{
-			chord_count = 0;
-			chord_index = (chord_index+1)&3; // +1 mod 4
-
-			// change note for chord effect
-			// only trigger a note change if it's different than the previous note
-			if (chord_table[chord_table_idx][chord_index] != chord_table[chord_table_idx][(chord_index-1)&3])
+			chord_count++;
+			if (chord_count >= chord_next)
 			{
-				play_note(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_table_idx][chord_index])%48 ],
-				2, 0);
+				chord_count = 0;
+				chord_index = (chord_index+1)&3; // +1 mod 4
+
+				// change note for chord effect
+				// only trigger a note change if it's different than the previous note
+				if (chord_table[chord_table_idx][chord_index] != chord_table[chord_table_idx][(chord_index-1)&3])
+				{
+					play_note(Chroma[ (slice_get_chroma(*slice_current()) + chord_table[chord_table_idx][chord_index])%48 ],
+					2, 0);
+				}
 			}
-		}
+			break;
 
-		break;
 		case 1:
+			// portamento
+			TA0CCR0 = TA0CCR0 + slide_speed_0;
+			// 1924 = C1
+			if (slide_speed_0 > 0 && TA0CCR0 > 3848) // going down
+				TA0CCR0 = 64;
+			if (slide_speed_0 < 0 && TA0CCR0 < 64) // going up
+			 	TA0CCR0 = 3848;
+			TA0CCR1 = TA0CCR0/2;
+			break;
 
-		// portamento
-		chord_index = 5;
-		TA0CCR0 -= chord_index;
-		TA0CCR1 = TA0CCR0/2;
-		TA0R = 0;
+		case 2:
+			slide_tick_0++;
+			slide_tick_0 &= 3;
 
-		break;
+			// pulse width sweep
+			if (slide_tick_0 == 0)
+			{
+				TA0CCR1 += slide_speed_0;
+				if (slide_speed_0 > 0 && TA0CCR1 > TA0CCR0)
+				{
+					slide_speed_0 *= -1;
+					TA0CCR1 = TA0CCR0;
+				}
+				if (slide_speed_0 < 0 && TA0CCR1 > TA0CCR0)
+				{
+					slide_speed_0 *= -1;
+					TA0CCR1 = 0;
+				}
+			}
+			break;
+		// pwm sweep
 	}
 
 	// calculate how long next frequency will be
@@ -124,7 +146,7 @@ __interrupt void timer0_A0()
 
 		// this is to catch cases where TA0CCR2 is set very small
 		// which messes up EVERYTHING ;)
-		
+
 		if (TA0CCR2 < ticks_next/8)
 		{
 			TA0CCR2 = ticks_next/8;
@@ -160,14 +182,14 @@ void DEBUG_load_block()
 {
     Slice_buff = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff[0]  = slice_make(G3,0,0,0);
-    Slice_buff[1]  = slice_make(G3,0,0,0);
-    Slice_buff[2]  = slice_make(G4,0,0,4);
-    Slice_buff[3]  = slice_make(G4,0,0,4);
-    Slice_buff[4]  = slice_make(0,0,3,0);
-    Slice_buff[5]  = slice_make(G3,0,0,0);
-    Slice_buff[6]  = slice_make(G4,0,0,0);
-    Slice_buff[7]  = slice_make(C2,0,3,0);
+	Slice_buff[0]  = slice_make(G3,0,2,32);
+    Slice_buff[1]  = slice_make(G3,0,2,32);
+    Slice_buff[2]  = slice_make(G3,3,2,1);
+    Slice_buff[3]  = slice_make(G3,3,2,1);
+    Slice_buff[4]  = slice_make(G3,3,2,1);
+    Slice_buff[5]  = slice_make(G3,1,2,63);
+    Slice_buff[6]  = slice_make(G3,1,2,63);
+    Slice_buff[7]  = slice_make(G3,1,2,63);
 
     Slice_buff[8]  = slice_make(G4,0,0,6);
     Slice_buff[9]  = slice_make(0,0,3,0);

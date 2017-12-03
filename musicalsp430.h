@@ -27,7 +27,7 @@ typedef enum NoteHertz MusicNote;
 // GLOBALS
 // because I'm a savage
 
-#define BLOCK_SIZE (64)
+#define BLOCK_SIZE (8)
 
 Slice *Slice_buff; // global slice buffer. 32 slices.
 int Slice_index = -1;   // Slice_index in Slice array
@@ -75,6 +75,9 @@ const char chord_table[12][4] =
 unsigned int chord_index = 0;
 unsigned int chord_count = 0;
 unsigned int chord_next = 7;
+
+int slide_speed_0 = 0;
+int slide_tick_0 = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 

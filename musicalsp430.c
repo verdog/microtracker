@@ -44,7 +44,7 @@ Slice slice_make(MusicNote note, int pulsew, int effect, int eparam)
     result |= effect << 6;
 
     // remaining are effect parameters
-    if (eparam < 0 || eparam > 32) eparam = 0; // only valid values are 0-32
+    if (eparam < 0 || eparam > 63) eparam = 0; // only valid values are 0-32
     result |= eparam;
 
     return result;
@@ -82,7 +82,7 @@ void slice_play(Slice readme)
     int octave = (0x3 & readme >> 10);
     int note = Chroma[((readme >> 12) + 12*octave)%48];
     int effect = (readme >> 6)&3;
-    int effectparam = (readme)&31;
+    int effectparam = (readme)&63;
 
     // determine pulse width
     unsigned char pw;
@@ -94,20 +94,34 @@ void slice_play(Slice readme)
         case 3: pw = 16; break;
     }
 
-    // select chord
-    if (effect == 0)
+    switch(effect)
     {
-        chord_table_idx = effectparam%12;
-    }
-    else
-    {
-        chord_table_idx = 0;
+        case 0: // chord/none
+            chord_table_idx = effectparam%12;
+            break;
+
+        case 1: // portamento
+            if (effectparam & 0b100000)
+            {   // slide up
+                slide_speed_0 = (0 - ((effectparam & 0b011111)+1))*2;
+            }
+            else
+            {
+                // slide down
+                slide_speed_0 = ((effectparam & 0b011111)+1)*2;
+            }
+            break;
+
+        case 2: // pulse width sweep
+            slide_speed_0 = 1 + effectparam;
+            break;
+        case 3: // kill
+            pw = 1;
+            break;
     }
 
     // set effect
     effect_flag_set(0, effect);
-
-    if (effect == 3) pw = 1; // kill effect
 
     // play it
     play_note(note, pw, 0);
