@@ -26,10 +26,7 @@ int main()
 	DEBUG_load_block_1();
 
 	//TICKS_PER_BEAT = 65535 - 1; // 19330
-	TICKS_PER_STEP = 17050;
-
-	// serial
-	serial_init(9600);
+	TICKS_PER_STEP = 17500;
 
     // set up button
     P1REN = 0;
@@ -60,10 +57,17 @@ int main()
 
     __bis_SR_register(GIE); // interrupts enabled
 
+	// serial
+	serial_init(9600);
+
     // first notes
 	slice_advance();
 
-    for(;;);
+    for(;;)
+	{
+		cio_printf("%u\n\r", Slice_index);
+		__delay_cycles(1000);
+	};
 
     return 0;
 
@@ -163,14 +167,17 @@ __interrupt void timer0_A0()
 		// set up next note trigger
 		TA0CCR2 = ((ticks_elapsed + ticks_next) - TICKS_PER_STEP);
 
+		// this should never happen... but it does lol
+		if (TA0CCR2 > ticks_next) TA0CCR2 %= ticks_next;
+
 		// this is to catch cases where TA0CCR2 is set very small
 		// which messes up EVERYTHING ;)
-
 		if (TA0CCR2 < ticks_next/2)
 		{
 			TA0CCR2 = ticks_next/2;
 		}
 
+		TA0R = 0;
 		TA0CCTL2 = CCIE;
 	}
 
@@ -266,23 +273,23 @@ void DEBUG_load_block_0()
 {
     Slice_buff_0 = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff_0[0]  = slice_make(0,3,3,0);
-    Slice_buff_0[1]  = slice_make(0,3,3,0);
-    Slice_buff_0[2]  = slice_make(Cs4,3,0,0);
-    Slice_buff_0[3]  = slice_make(D4,2,3,0);
-    Slice_buff_0[4]  = slice_make(B5,3,3,0);
-    Slice_buff_0[5]  = slice_make(0,3,3,0);
-    Slice_buff_0[6]  = slice_make(Cs5,3,0,0);
-    Slice_buff_0[7]  = slice_make(Cs4,3,0,0);
+	Slice_buff_0[0]  = slice_make(C5,0,0,0);
+    Slice_buff_0[1]  = slice_make(C5,0,0,0);
+    Slice_buff_0[2]  = slice_make(C5,0,0,0);
+    Slice_buff_0[3]  = slice_make(C5,0,0,0);
+    Slice_buff_0[4]  = slice_make(C5,0,0,0);
+    Slice_buff_0[5]  = slice_make(C5,0,0,0);
+    Slice_buff_0[6]  = slice_make(C5,0,0,0);
+    Slice_buff_0[7]  = slice_make(C5,0,0,0);
 
-    Slice_buff_0[8]  = slice_make(C2,3,0,0);
-    Slice_buff_0[9]  = slice_make(0,0,3,0);
-    Slice_buff_0[10] = slice_make(D2,3,0,0);
-    Slice_buff_0[11] = slice_make(E2,3,0,0);
-    Slice_buff_0[12] = slice_make(F3,3,3,0);
-    Slice_buff_0[13] = slice_make(0,0,3,0);
-    Slice_buff_0[14] = slice_make(G2,3,0,0);
-    Slice_buff_0[15] = slice_make(G3,3,0,0);
+    Slice_buff_0[8]  = slice_make(Fs2,3,0,0);
+    Slice_buff_0[9]  = slice_make(Fs2,3,0,0);
+    Slice_buff_0[10] = slice_make(C5,0,0,0);
+    Slice_buff_0[11] = slice_make(C5,0,0,0);
+    Slice_buff_0[12] = slice_make(C5,0,0,0);
+    Slice_buff_0[13] = slice_make(C5,0,0,0);
+    Slice_buff_0[14] = slice_make(C5,0,0,0);
+    Slice_buff_0[15] = slice_make(C4,0,0,0);
 
     Slice_buff_0[16] = slice_make(G2,3,0,0);
     Slice_buff_0[17] = slice_make(A3,3,3,0);
@@ -314,7 +321,7 @@ void DEBUG_load_block_0()
     Slice_buff_0[40] = slice_make(0,3,3,0);
     Slice_buff_0[41] = slice_make(0,3,3,0);
     Slice_buff_0[42] = slice_make(Cs4,3,0,0);
-    Slice_buff_0[43] = slice_make(D4,2,3,0);
+    Slice_buff_0[43] = slice_make(D4,0,0,0);
     Slice_buff_0[44] = slice_make(B5,3,3,0);
     Slice_buff_0[45] = slice_make(0,3,3,0);
     Slice_buff_0[46] = slice_make(Cs5,3,0,0);
@@ -324,7 +331,7 @@ void DEBUG_load_block_0()
     Slice_buff_0[49] = slice_make(Fs2,3,0,0);
     Slice_buff_0[50] = slice_make(Fs4,3,0,0);
     Slice_buff_0[51] = slice_make(Fs3,3,0,0);
-    Slice_buff_0[52] = slice_make(B5,3,3,31);
+    Slice_buff_0[52] = slice_make(B5,3,3,0);
     Slice_buff_0[53] = slice_make(A2,3,0,0);
     Slice_buff_0[54] = slice_make(G3,3,3,0);
     Slice_buff_0[55] = slice_make(Fs3,3,0,0);
