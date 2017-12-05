@@ -85,6 +85,9 @@ int slide_tick_0 = 0;
 int slide_speed_1 = 0;
 int slide_tick_1 = 0;
 
+int kill_fraction_0 = 0;
+int kill_fraction_1 = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // hz_to_clock

@@ -91,16 +91,19 @@ void slice_play(Slice readme, unsigned int voice)
     voice %= 2;
     int *chord_table_idx_p;
     int *slide_speed_p;
+    int *kill_fraction_p;
 
     switch (voice)
     {
         case 0:
             chord_table_idx_p = &chord_table_idx_0;
             slide_speed_p = &slide_speed_0;
+            kill_fraction_p = &kill_fraction_0;
             break;
         case 1:
             chord_table_idx_p = &chord_table_idx_1;
             slide_speed_p = &slide_speed_1;
+            kill_fraction_p = &kill_fraction_1;
             break;
     }
 
@@ -142,7 +145,10 @@ void slice_play(Slice readme, unsigned int voice)
             *slide_speed_p = 1 + effectparam;
             break;
         case 3: // kill
-            pw = 1;
+            if (effectparam == 0)
+                pw = 1;
+            else
+                *kill_fraction_p = effectparam;
             break;
     }
 
@@ -179,6 +185,8 @@ void slice_advance()
     chord_count_0 = 0;
     chord_index_1 = 0;
     chord_count_1 = 0;
+    kill_fraction_0 = 64;
+    kill_fraction_1 = 64;
 
     // disable interrupts for ccr2
     TA0CCTL2 &= ~(CCIE);
