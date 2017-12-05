@@ -127,29 +127,35 @@ void slice_play(Slice readme, unsigned int voice)
     {
         case 0: // chord/none
             *chord_table_idx_p = effectparam%12;
-            break;
+        break;
 
         case 1: // portamento
             if (effectparam & 0b100000)
             {   // slide up
-                *slide_speed_p = (0 - ((effectparam & 0b011111)+1))*2;
+                *slide_speed_p = (0 - ((effectparam & 0b011111)+1))*1;
             }
             else
             {
                 // slide down
-                *slide_speed_p = ((effectparam & 0b011111)+1)*2;
+                *slide_speed_p = ((effectparam & 0b011111)+1)*1;
             }
-            break;
+
+            if ((effectparam & 0b011111) > 5)
+            {
+                *kill_fraction_p = 32;
+            }
+        break;
 
         case 2: // pulse width sweep
             *slide_speed_p = 1 + effectparam;
-            break;
+        break;
+
         case 3: // kill
             if (effectparam == 0)
                 pw = 1;
             else
                 *kill_fraction_p = effectparam;
-            break;
+        break;
     }
 
     // set effect

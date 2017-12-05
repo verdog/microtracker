@@ -27,7 +27,7 @@ typedef enum NoteHertz MusicNote;
 // GLOBALS
 // because I'm a savage
 
-#define BLOCK_SIZE (64)
+#define BLOCK_SIZE (16)
 
 Slice *Slice_buff_0; // global slice buffer for voice 0.
 Slice *Slice_buff_1; // global slice buffer for voice 1.

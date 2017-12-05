@@ -111,14 +111,19 @@ __interrupt void timer0_A0()
 		break;
 
 		case 1:
-			// portamento
-			TA0CCR0 = TA0CCR0 + slide_speed_0;
-			// 1924 = C1
-			if (slide_speed_0 > 0 && TA0CCR0 > 3848) // going down
-				TA0CCR0 = 64;
-			if (slide_speed_0 < 0 && TA0CCR0 < 64) // going up
-			 	TA0CCR0 = 3848;
-			TA0CCR1 = TA0CCR0/2;
+			slide_tick_0++;
+			slide_tick_0 &= 1;
+
+			if (slide_tick_0 == 0)
+			{	// portamento
+				TA0CCR0 = TA0CCR0 + ((TA0CCR0/100)+1)*slide_speed_0;
+				// 1924 = C1
+				if (slide_speed_0 > 0 && TA0CCR0 > 3848) // going down
+					TA0CCR0 = 64;
+				if (slide_speed_0 < 0 && TA0CCR0 < 64) // going up
+				 	TA0CCR0 = 3848;
+				TA0CCR1 = TA0CCR0/2;
+			}
 
 			if (ticks_elapsed > (TICKS_PER_STEP*kill_fraction_0)/64)
 			{
@@ -222,16 +227,21 @@ __interrupt void timer1_A0()
 		break;
 
 		case 1:
-			// portamento
-			TA1CCR0 = TA1CCR0 + slide_speed_1;
-			// 1924 = C1
-			if (slide_speed_1 > 0 && TA1CCR0 > 3848) // going down
-				TA1CCR0 = 64;
-			if (slide_speed_1 < 0 && TA1CCR0 < 64) // going up
-			 	TA1CCR0 = 3848;
-			TA1CCR1 = TA1CCR0/2;
+			slide_tick_1++;
+			slide_tick_1 &= 1;
 
-			if (ticks_elapsed > (TICKS_PER_STEP*kill_fraction_0)/64)
+			if (slide_tick_1 == 0)
+			{	// portamento
+				TA1CCR0 = TA1CCR0 + ((TA1CCR0/100)+1)*slide_speed_1;
+				// 1924 = C1
+				if (slide_speed_1 > 0 && TA1CCR0 > 3848) // going down
+					TA1CCR0 = 32;
+				if (slide_speed_1 < 0 && TA1CCR0 < 32) // going up
+					TA1CCR0 = 3848;
+				TA1CCR1 = TA1CCR0/2;
+			}
+
+			if (ticks_elapsed > (TICKS_PER_STEP*kill_fraction_1)/64)
 			{
 				// kill sound
 				TA1CCR1 = TA1CCR0;
@@ -273,23 +283,23 @@ void DEBUG_load_block_0()
 {
     Slice_buff_0 = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff_0[0]  = slice_make(C5,0,0,0);
-    Slice_buff_0[1]  = slice_make(C5,0,0,0);
-    Slice_buff_0[2]  = slice_make(C5,0,0,0);
-    Slice_buff_0[3]  = slice_make(C5,0,0,0);
-    Slice_buff_0[4]  = slice_make(C5,0,0,0);
-    Slice_buff_0[5]  = slice_make(C5,0,0,0);
-    Slice_buff_0[6]  = slice_make(C5,0,0,0);
-    Slice_buff_0[7]  = slice_make(C5,0,0,0);
+	Slice_buff_0[0]  = slice_make(B4,0,1,31);
+    Slice_buff_0[1]  = slice_make(B4,0,1,29);
+    Slice_buff_0[2]  = slice_make(B4,0,1,8);
+    Slice_buff_0[3]  = slice_make(B4,0,1,7);
+    Slice_buff_0[4]  = slice_make(B4,0,1,6);
+    Slice_buff_0[5]  = slice_make(B4,0,1,5);
+    Slice_buff_0[6]  = slice_make(B4,0,1,2);
+    Slice_buff_0[7]  = slice_make(B4,0,1,1);
 
-    Slice_buff_0[8]  = slice_make(Fs2,3,0,0);
-    Slice_buff_0[9]  = slice_make(Fs2,3,0,0);
-    Slice_buff_0[10] = slice_make(C5,0,0,0);
-    Slice_buff_0[11] = slice_make(C5,0,0,0);
-    Slice_buff_0[12] = slice_make(C5,0,0,0);
-    Slice_buff_0[13] = slice_make(C5,0,0,0);
-    Slice_buff_0[14] = slice_make(C5,0,0,0);
-    Slice_buff_0[15] = slice_make(C4,0,0,0);
+    Slice_buff_0[8]  = slice_make(B5,0,1,31);
+    Slice_buff_0[9]  = slice_make(B5,0,1,29);
+    Slice_buff_0[10] = slice_make(B5,0,1,27);
+    Slice_buff_0[11] = slice_make(B5,0,1,25);
+    Slice_buff_0[12] = slice_make(B5,0,1,10);
+    Slice_buff_0[13] = slice_make(B5,0,1,5);
+    Slice_buff_0[14] = slice_make(B5,0,1,2);
+    Slice_buff_0[15] = slice_make(B5,0,1,1);
 
     Slice_buff_0[16] = slice_make(G2,3,0,0);
     Slice_buff_0[17] = slice_make(A3,3,3,0);
@@ -352,23 +362,23 @@ void DEBUG_load_block_1()
 {
 	Slice_buff_1 = malloc(BLOCK_SIZE*sizeof(Slice));
 
-	Slice_buff_1[0]  = slice_make(A3,3,3,0);
-    Slice_buff_1[1]  = slice_make(A3,3,3,8);
-    Slice_buff_1[2]  = slice_make(A3,3,3,16);
-    Slice_buff_1[3]  = slice_make(A3,3,3,24);
-    Slice_buff_1[4]  = slice_make(A3,3,3,32);
-    Slice_buff_1[5]  = slice_make(A3,3,3,40);
-    Slice_buff_1[6]  = slice_make(A3,3,3,48);
-    Slice_buff_1[7]  = slice_make(A3,3,3,56);
+	Slice_buff_1[0]  = slice_make(B4,0,1,31);
+    Slice_buff_1[1]  = slice_make(B4,0,1,29);
+    Slice_buff_1[2]  = slice_make(B4,0,1,27);
+    Slice_buff_1[3]  = slice_make(B4,0,1,25);
+    Slice_buff_1[4]  = slice_make(B4,0,1,10);
+    Slice_buff_1[5]  = slice_make(B4,0,1,5);
+    Slice_buff_1[6]  = slice_make(B4,0,1,2);
+    Slice_buff_1[7]  = slice_make(B4,0,1,1);
 
-    Slice_buff_1[8]  = slice_make(D4,0,0,0);
-    Slice_buff_1[9]  = slice_make(0,0,3,0);
-    Slice_buff_1[10] = slice_make(A3,0,0,0);
-    Slice_buff_1[11] = slice_make(0,0,3,0);
-    Slice_buff_1[12] = slice_make(D4,0,0,0);
-    Slice_buff_1[13] = slice_make(0,0,3,0);
-    Slice_buff_1[14] = slice_make(Fs4,0,0,0);
-    Slice_buff_1[15] = slice_make(0,0,3,0);
+    Slice_buff_1[8]  = slice_make(B5,0,1,31);
+    Slice_buff_1[9]  = slice_make(B5,0,1,29);
+    Slice_buff_1[10] = slice_make(B5,0,1,27);
+    Slice_buff_1[11] = slice_make(B5,0,1,25);
+    Slice_buff_1[12] = slice_make(B5,0,1,10);
+    Slice_buff_1[13] = slice_make(B5,0,1,5);
+    Slice_buff_1[14] = slice_make(B5,0,1,2);
+    Slice_buff_1[15] = slice_make(B5,0,1,1);
 
     Slice_buff_1[16] = slice_make(B4,0,0,0);
     Slice_buff_1[17] = slice_make(0,0,3,0);
