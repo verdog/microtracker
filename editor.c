@@ -28,6 +28,9 @@ void display_slices_p(unsigned int start, unsigned int end)
     if (end > BLOCK_SIZE-1) end = BLOCK_SIZE-1;
 
     char sc = '0'; // "special char", used for nav marker
+
+    cio_printf("\n\r");
+
     for (i=start; i<=end; i++)
     {
         // row number
