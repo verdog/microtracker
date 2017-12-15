@@ -4,8 +4,6 @@
  * Josh Chandler
 */
 
-/* this is the chordeffect branch. */
-
 #include <stdlib.h>
 #include <msp430.h>
 #include "musicalsp430.c"
@@ -51,7 +49,6 @@ int main()
     TA0CTL  = TASSEL_2 | MC_1 | ID_3; // voice 0
     TA0CCTL0 = CCIE; // frequency interrupt
     TA0CCTL1 = OUTMOD_7; // PWM reset/set
-    // TA0CCTL2 = CCIE; // next note interrupt
 
     // voice 1
     TA1CCTL0 = CCIE;
